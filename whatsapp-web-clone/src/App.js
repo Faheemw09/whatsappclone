@@ -1,109 +1,70 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import { db, deleteAllUsers } from "./utils/db";
 import ContactList from "./components/ContactList";
 import ChatWindow from "./components/ChatWindow";
-import { AppProvider, useAppContext } from "./context/AppContext";
-import {
-  getContacts,
-  saveContact,
-  deleteAllDataWithConfirmation,
-} from "./utils/instantdb";
-import AddContactForm from "./components/AddContactForm";
-import "./index.css";
+import Registration from "./components/Registration";
 
-function App() {
-  const { state, dispatch } = useAppContext();
-  const [isFormVisible, setIsFormVisible] = useState(false);
+const App = () => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [selectedContact, setSelectedContact] = useState(null);
 
-  const contactsFetched = useRef(false); // To prevent double fetch on refresh
-
-  // Function to toggle form visibility
-  const toggleFormVisibility = () => {
-    setIsFormVisible(!isFormVisible);
-  };
-
-  // Fetch contacts from IndexedDB when the component mounts
   useEffect(() => {
-    const fetchContactsFromDB = async () => {
-      const contacts = await getContacts();
+    const savedUserId = localStorage.getItem("userId");
 
-      // If contacts are fetched from IndexedDB and they are not yet in state
-      if (contacts.length > 0 && state.contacts.length === 0) {
-        dispatch({ type: "SET_CONTACTS", payload: contacts });
-      }
-    };
+    if (savedUserId) {
+      const unsubscribe = db.subscribeQuery(
+        {
+          users: {
+            $filter: { id: savedUserId },
+          },
+        },
+        (resp) => {
+          if (resp.data?.users?.length > 0) {
+            setCurrentUser(resp.data.users[0]);
+          }
+        }
+      );
 
-    if (!contactsFetched.current) {
-      fetchContactsFromDB();
-      contactsFetched.current = true;
+      return () => unsubscribe();
     }
-  }, [dispatch, state.contacts.length]);
+  }, []);
 
-  // Add new contact and update the state immediately to reflect changes
-  const handleSaveContact = async (newContact) => {
-    // Prevent adding duplicate contact by checking if it already exists
-    const existingContact = state.contacts.find(
-      (contact) => contact.phone === newContact.phone
-    );
-    if (existingContact) {
-      alert("This contact already exists!");
-      return;
-    }
-
-    // Update the context state with the new contact
-    dispatch({
-      type: "SET_CONTACTS",
-      payload: [...state.contacts, newContact], // Update context state directly
-    });
-
-    // Save the new contact to IndexedDB
-    await saveContact(newContact);
-
-    // Close the form after saving the contact
-    setIsFormVisible(false);
+  const handleProfileCreated = (user) => {
+    setCurrentUser(user);
+    localStorage.setItem("userId", user.id);
   };
 
-  const handleDeleteAll = async () => {
-    await deleteAllDataWithConfirmation(); // Assuming this function clears the IndexedDB
-    dispatch({ type: "SET_CONTACTS", payload: [] }); // Clear the context state to reflect the update
+  const handleSelectContact = (contact) => {
+    setSelectedContact(contact);
   };
+
+  if (!currentUser) {
+    return <Registration onProfileCreated={handleProfileCreated} />;
+  }
 
   return (
-    <div className="flex h-screen bg-red-200">
-      <div className="w-1/3 bg-white border-r border-red-300 p-4">
-        <button
-          onClick={toggleFormVisibility}
-          className="bg-green-500 text-white p-2 mb-4 rounded-lg"
-        >
-          Add Contact
-        </button>
-        {/* <button
-          onClick={handleDeleteAll}
-          className="bg-red-500 text-white p-2 mt-4 rounded-lg"
-        >
-          Delete All Contacts
-        </button> */}
-        {/* Show AddContactForm only if isFormVisible is true */}
-        {isFormVisible && <AddContactForm onContactAdded={handleSaveContact} />}
-
-        <div className="overflow-y-auto  max-h-[calc(100vh-100px)] scrollbar-hidden">
-          {/* Adjust height as per your layout */}
-          <ContactList contacts={state.contacts} />
-        </div>
+    <div className="h-screen flex">
+      <div className="w-1/3 border-r p-1">
+        <ContactList
+          currentUser={currentUser} // Passing currentUser to ContactList
+          onSelectContact={handleSelectContact}
+        />
       </div>
 
-      <div className="flex-1 bg-blue-100">
-        <ChatWindow />
+      <div className="w-2/3">
+        {selectedContact ? (
+          <ChatWindow
+            currentUser={currentUser}
+            selectedContact={selectedContact}
+          />
+        ) : (
+          <p className="text-center text-gray-500 mt-8">
+            Select a contact to chat
+          </p>
+        )}
       </div>
     </div>
   );
-}
+};
 
-function AppWithProvider() {
-  return (
-    <AppProvider>
-      <App />
-    </AppProvider>
-  );
-}
-
-export default AppWithProvider;
+export default App;

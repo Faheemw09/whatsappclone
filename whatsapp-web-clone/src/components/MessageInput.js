@@ -1,11 +1,11 @@
 import React from "react";
 
-function MessageInput({ value, onChange, onSend }) {
+function MessageInput({ message, setMessage, handleSend }) {
   // Function to handle Enter key press
   const handleKeyPress = (e) => {
-    if (e.key === "Enter" && value.trim() !== "") {
+    if (e.key === "Enter" && message.trim() !== "") {
       e.preventDefault(); // Prevent default Enter key behavior (e.g., new line in text area)
-      onSend(); // Trigger the send message function
+      handleSend(); // Trigger the send message function
     }
   };
 
@@ -15,12 +15,12 @@ function MessageInput({ value, onChange, onSend }) {
         type="text"
         className="flex-1 p-2 rounded-lg border border-gray-300"
         placeholder="Type a message..."
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
         onKeyPress={handleKeyPress} // Add the keypress event
       />
       <button
-        onClick={onSend}
+        onClick={handleSend}
         className="ml-2 p-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
       >
         Send

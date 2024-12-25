@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAppContext } from "../context/AppContext";
-import { saveContact } from "../utils/instantdb";
+import { saveContact } from "../utils/db";
 
 const AddContactForm = ({ onContactAdded }) => {
   const [name, setName] = useState("");

@@ -1,5 +1,5 @@
 import React from "react";
-import { useMessages } from "../hooks/useInstantDB"; // Import the useMessages hook
+import { useMessages } from "../hooks/useMessages"; // Import the useMessages hook
 
 function ContactListItem({ contact, isSelected, onSelect }) {
   // Get the last message for this contact
