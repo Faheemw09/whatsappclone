@@ -7,7 +7,7 @@
 
 The **WhatsApp Clone** is a feature-rich, real-time messaging web application built using modern web technologies. It allows users to send messages, view chat histories, and interact with other users in a sleek and responsive UI. This project demonstrates a robust implementation of database integration, component-based architecture, and a user-friendly experience.
 
-🔗 [Live Demo](https://whatsappclone-sand.vercel.app/)
+🔗 [Live Demo](https://whatsappclone-lake.vercel.app/)
 
 ---
 
